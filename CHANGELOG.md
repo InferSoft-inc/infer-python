@@ -8,7 +8,7 @@ All notable changes to this project are documented here. The format is based on
 
 Nothing yet.
 
-## [0.1.0] - 2026-06-12
+## [0.1.1] - 2026-06-18
 
 ### Added
 - Transport-level resilience: connection failures and timeouts are now retried on the
