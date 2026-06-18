@@ -1,0 +1,96 @@
+# Publishes to PyPI via Trusted Publishing (OIDC — no API token).
+# Trigger: pushing a version tag (v0.1.0). The tag must match the package
+# version, and the full test suite must pass on the tagged commit.
+#
+# No `concurrency` block on purpose: a release must never be auto-cancelled by
+# a newer one; distinct tags are distinct releases.
+#
+# Actions are pinned to commit SHAs (this workflow holds id-token: write, the
+# credential that mints PyPI tokens); Dependabot keeps the pins fresh via
+# .github/dependabot.yml.
+name: release
+
+permissions:
+  contents: read
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    name: build & verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Tag must match package version
+        # The version is DYNAMIC (hatch reads src/infersoft/_version.py), so
+        # read that same file — pyproject has no [project] version key. Every
+        # failure mode exits non-zero with an explicit message.
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python - "$TAG" <<'PYEOF'
+          import re
+          import sys
+          from pathlib import Path
+
+          tag = sys.argv[1].removeprefix("v")
+          path = Path("src/infersoft/_version.py")
+          if not path.exists():
+              sys.exit(f"error: {path} not found — cannot verify the tag")
+          match = re.search(r'__version__ = "(.+)"', path.read_text())
+          if not match:
+              sys.exit(f"error: failed to extract __version__ from {path}")
+          pkg = match.group(1)
+          if pkg != tag:
+              sys.exit(f"error: tag v{tag} does not match package version {pkg}")
+          print(f"version check OK: {pkg}")
+          PYEOF
+
+      - name: Gates on the tagged commit
+        run: |
+          python -m pip install -e ".[dev]"
+          ruff check .
+          mypy src
+          pytest -q
+
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install build
+          python -m build
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Must match the Environment name registered with the PyPI trusted publisher.
+    environment: pypi
+    permissions:
+      id-token: write  # OIDC token for trusted publishing
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist
+          path: dist/
+
+      # Pinned to the v1.14.0 release commit (== release/v1 head at pin time).
+      - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        with:
+          # Makes re-running a failed publish idempotent: a run that died
+          # between the wheel and the sdist can retry without burning the
+          # version number.
+          skip-existing: true
