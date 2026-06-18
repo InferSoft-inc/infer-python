@@ -1,9 +1,18 @@
 # Keeps the SHA-pinned actions in .github/workflows/ fresh: Dependabot opens
 # PRs that bump the pinned commits (and their version comments) when upstream
-# actions release.
+# actions release. Grouped so a week's bumps arrive as one PR, not one-per-action.
+#
+# No "pip" ecosystem on purpose: this is a published library, so runtime
+# dependencies are declared as ranges in pyproject.toml (e.g. httpx>=0.27,<1)
+# with no committed lock file. Letting Dependabot bump those lower bounds would
+# raise the floor on every consumer for no gain — the Python counterpart of the
+# framework-floor pinning in the .NET repo.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      github-actions:
+        patterns: ["*"]
