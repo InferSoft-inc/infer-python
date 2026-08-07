@@ -352,6 +352,14 @@ class CreditsEstimate(_Model):
     id: str
 
 
+class CreditsQuote(_Model):
+    """Read-only credit calculation; carries no ``id`` because nothing was reserved."""
+
+    total_credits: int
+    page_count: int
+    document_count: int
+
+
 class Job(_Model):
     id: int
     organization_id: str

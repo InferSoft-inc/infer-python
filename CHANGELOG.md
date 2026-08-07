@@ -6,7 +6,12 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- `jobs.quote()` (sync and async) — read-only credit calculation via
+  `POST /api/jobs/credits/quote`. Same request shape and formula as
+  `jobs.estimate()`, but nothing is reserved and no `id` is returned, so it can
+  be called repeatedly while composing a job. Returns the new `CreditsQuote`
+  model (`total_credits`, `page_count`, `document_count`).
 
 ## [0.1.1] - 2026-06-18
 
