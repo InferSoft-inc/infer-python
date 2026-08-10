@@ -53,6 +53,26 @@ def test_quote_omits_prompts_when_not_given(client, httpx_mock):
     assert body["synchronous"] is False
 
 
+def test_quote_is_retried_on_transient_failure(client, httpx_mock):
+    httpx_mock.add_response(
+        method="POST",
+        url="https://api.test/api/jobs/credits/quote",
+        status_code=503,
+        json={"title": "unavailable"},
+    )
+    httpx_mock.add_response(
+        method="POST",
+        url="https://api.test/api/jobs/credits/quote",
+        json=_QUOTE,
+    )
+
+    quote = client.jobs.quote(step="splitter", document_ids=[1])
+
+    assert quote.total_credits == 17
+    posts = [r for r in httpx_mock.get_requests() if r.url.path == "/api/jobs/credits/quote"]
+    assert len(posts) == 2
+
+
 def test_quote_requires_selectors_or_document_ids():
     # No httpx_mock: the call raises before any network request.
     bare = Client(

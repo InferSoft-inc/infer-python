@@ -517,7 +517,7 @@ The full set: `build_file_selector`, `build_folder_selector`, `build_name_select
 When you already have a list of document IDs, skip selectors entirely — every
 selector-taking method (`documents.search`/`iterate`/`get_values`/
 `move_to_folder`/`bulk_delete`, `projects.assign_documents`,
-`jobs.estimate`/`run`, and `client.extract`) accepts `document_ids=` as a
+`jobs.estimate`/`quote`/`run`, and `client.extract`) accepts `document_ids=` as a
 shortcut:
 
 ```python
