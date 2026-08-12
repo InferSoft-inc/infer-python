@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from infersoft import Client
+from infersoft import Client, CreditsQuote
 
 _QUOTE = {"total_credits": 17, "page_count": 9, "document_count": 4}
 _FILE_SEL = {"include": [{"type": "fileSelector", "files": [1, 2]}], "exclude": []}
@@ -24,7 +24,10 @@ def test_quote_sends_estimate_shaped_body_without_idempotency_key(client, httpx_
     assert quote.total_credits == 17
     assert quote.page_count == 9
     assert quote.document_count == 4
-    assert not hasattr(quote, "id")
+    # Nothing was reserved, so there is no credits id to hand to jobs.start().
+    # Asserted against the declared fields, not the instance: _Model allows
+    # extras, so an `id` in the payload would be carried on the object anyway.
+    assert "id" not in CreditsQuote.model_fields
 
     post = [r for r in httpx_mock.get_requests() if r.url.path == "/api/jobs/credits/quote"][0]
     body = json.loads(post.content)
@@ -86,15 +89,38 @@ def test_quote_requires_selectors_or_document_ids():
         bare.jobs.quote(step="splitter")
 
 
-async def test_quote_async(async_client, httpx_mock):
+async def test_async_quote_reimplements_the_sync_contract(async_client, httpx_mock):
+    # AsyncJobsResource.quote is a second implementation, not a wrapper delegating
+    # to the sync one, so every part of the contract is re-pinned against that
+    # copy: path, body, unkeyed headers, and retry-on-transient. Mutating any of
+    # them in the async method leaves the rest of the suite green — this is the
+    # only test that fails.
+    httpx_mock.add_response(
+        method="POST",
+        url="https://api.test/api/jobs/credits/quote",
+        status_code=503,
+        json={"title": "unavailable"},
+    )
     httpx_mock.add_response(
         method="POST",
         url="https://api.test/api/jobs/credits/quote",
         json=_QUOTE,
     )
 
-    quote = await async_client.jobs.quote(step="classifier", document_ids=[1, 2])
+    quote = await async_client.jobs.quote(
+        step="extractor", document_ids=[1, 2], prompts=[5], synchronous=True
+    )
 
-    assert quote.total_credits == 17 and quote.document_count == 4
-    post = [r for r in httpx_mock.get_requests() if r.url.path == "/api/jobs/credits/quote"][0]
-    assert "Idempotency-Key" not in post.headers
+    assert isinstance(quote, CreditsQuote)
+    assert quote.total_credits == 17
+
+    posts = [r for r in httpx_mock.get_requests() if r.url.path == "/api/jobs/credits/quote"]
+    # Read-only and unkeyed, but still opted into retries via `idempotent=True`.
+    assert len(posts) == 2
+    assert json.loads(posts[0].content) == {
+        "steps": ["extractor"],
+        "selectors": _FILE_SEL,
+        "synchronous": True,
+        "prompts": [5],
+    }
+    assert "Idempotency-Key" not in posts[0].headers
