@@ -14,7 +14,7 @@ from .._wait import (
     warn_once_unknown_status,
 )
 from ..errors import CreditsLimitExceededError
-from ..models import CreditsEstimate, DocumentSummary, Job, JobPage, JobStatus
+from ..models import CreditsEstimate, CreditsQuote, DocumentSummary, Job, JobPage, JobStatus
 from ..selectors import _resolve_selectors, build_job_selector, build_selectors
 from .documents import AsyncDocumentsResource, DocumentsResource
 
@@ -74,6 +74,33 @@ class JobsResource:
             idempotency_key=idempotency_key or new_idempotency_key(),
         )
         return CreditsEstimate.model_validate(raw)
+
+    def quote(
+        self,
+        *,
+        step: Step,
+        selectors: Selectors | None = None,
+        document_ids: Sequence[int] | None = None,
+        prompts: Sequence[int] | None = None,
+        synchronous: bool = False,
+    ) -> CreditsQuote:
+        """Price a workflow without reserving anything.
+
+        Same request shape and formula as :meth:`estimate`, but read-only: no
+        documents are reserved and no ``id`` is returned, so the result cannot
+        be passed to :meth:`start`. Use it while composing a job; call
+        :meth:`estimate` when ready to start.
+        """
+        selectors = _resolve_selectors(selectors, document_ids, required=True)
+        body: dict[str, Any] = {
+            "steps": [step],
+            "selectors": selectors,
+            "synchronous": synchronous,
+        }
+        if prompts:
+            body["prompts"] = list(prompts)
+        raw = self._http.request("POST", "/api/jobs/credits/quote", json=body, idempotent=True)
+        return CreditsQuote.model_validate(raw)
 
     def start(
         self,
@@ -270,6 +297,29 @@ class AsyncJobsResource:
             idempotency_key=idempotency_key or new_idempotency_key(),
         )
         return CreditsEstimate.model_validate(raw)
+
+    async def quote(
+        self,
+        *,
+        step: Step,
+        selectors: Selectors | None = None,
+        document_ids: Sequence[int] | None = None,
+        prompts: Sequence[int] | None = None,
+        synchronous: bool = False,
+    ) -> CreditsQuote:
+        """Async :meth:`JobsResource.quote` (read-only, nothing reserved)."""
+        selectors = _resolve_selectors(selectors, document_ids, required=True)
+        body: dict[str, Any] = {
+            "steps": [step],
+            "selectors": selectors,
+            "synchronous": synchronous,
+        }
+        if prompts:
+            body["prompts"] = list(prompts)
+        raw = await self._http.request(
+            "POST", "/api/jobs/credits/quote", json=body, idempotent=True
+        )
+        return CreditsQuote.model_validate(raw)
 
     async def start(
         self,

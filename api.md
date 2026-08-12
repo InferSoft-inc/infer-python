@@ -116,6 +116,9 @@ Conventions used below:
 
 - `client.jobs.estimate(*, step, selectors=None, document_ids=None, prompts=None, synchronous=False, idempotency_key=None) -> CreditsEstimate`
   — **write**: `POST /api/jobs/credits/estimate`.
+- `client.jobs.quote(*, step, selectors=None, document_ids=None, prompts=None, synchronous=False) -> CreditsQuote`
+  — **read**: `POST /api/jobs/credits/quote`. Same formula as `estimate` but
+  nothing is reserved and no `id` is returned; use it while composing a job.
 - `client.jobs.start(credits_id, *, project_id=None, idempotency_key=None) -> Job`
   — **write**: `POST /api/jobs/start`.
 - `client.jobs.run(*, step, selectors=None, document_ids=None, prompts=None, synchronous=False, project_id=None, max_credits=None, wait=False, max_wait_seconds=1800.0, poll_interval=2.0) -> Job`
