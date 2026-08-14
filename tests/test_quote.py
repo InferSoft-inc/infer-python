@@ -117,10 +117,13 @@ async def test_async_quote_reimplements_the_sync_contract(async_client, httpx_mo
     posts = [r for r in httpx_mock.get_requests() if r.url.path == "/api/jobs/credits/quote"]
     # Read-only and unkeyed, but still opted into retries via `idempotent=True`.
     assert len(posts) == 2
-    assert json.loads(posts[0].content) == {
-        "steps": ["extractor"],
-        "selectors": _FILE_SEL,
-        "synchronous": True,
-        "prompts": [5],
-    }
-    assert "Idempotency-Key" not in posts[0].headers
+    # Asserted over every attempt rather than the first: a replay that altered the
+    # body, or grew an Idempotency-Key on the way, would otherwise pass unnoticed.
+    for post in posts:
+        assert json.loads(post.content) == {
+            "steps": ["extractor"],
+            "selectors": _FILE_SEL,
+            "synchronous": True,
+            "prompts": [5],
+        }
+        assert "Idempotency-Key" not in post.headers
