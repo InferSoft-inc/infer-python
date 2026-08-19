@@ -234,6 +234,8 @@ class ExtractionTracebackItem(_Model):
 class ExtractionResultValue(_Model):
     name: str | None = None
     data_type: DataTypeName | None = None
+    display_type: str | None = None
+    group_name: str | None = None
     parsed_value: Any | None = None
     raw_value: str | None = None
     traceback: list[ExtractionTracebackItem] = Field(default_factory=list)
@@ -443,6 +445,8 @@ class PromptMeta(_Model):
     name: str
     description: str | None = None
     data_type: DataTypeName
+    display_type: str | None = None
+    group_name: str | None = None
     document_class: str
     deleted: bool
     created_at: datetime
