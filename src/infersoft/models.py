@@ -447,6 +447,7 @@ class PromptMeta(_Model):
     data_type: DataTypeName
     display_type: str | None = None
     group_name: str | None = None
+    example: Any | None = None
     document_class: str
     deleted: bool
     created_at: datetime
