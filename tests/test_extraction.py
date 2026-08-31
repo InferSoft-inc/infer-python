@@ -18,6 +18,8 @@ _DOC_WITH_EXTRACTION = {
             "value": {
                 "name": "Total",
                 "data_type": "Number",
+                "display_type": "currency",
+                "group_name": "Financials",
                 "parsed_value": 1234.5,
                 "raw_value": "$1,234.50",
                 "traceback": [
@@ -49,6 +51,8 @@ def test_get_with_prompts_returns_typed_extraction(client, httpx_mock):
     item = doc.extraction_results[0]
     assert item.prompt_id == 5
     assert item.value.data_type is DataTypeName.number
+    assert item.value.display_type == "currency"
+    assert item.value.group_name == "Financials"
     assert item.value.parsed_value == 1234.5
     assert item.value.raw_value == "$1,234.50"
     tb = item.value.traceback[0]
