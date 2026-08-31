@@ -59,3 +59,49 @@ def test_iterate_paginates(client, httpx_mock):
     assert ids == [1, 2]
     searches = [r for r in httpx_mock.get_requests() if r.url.path == "/api/prompts/search"]
     assert len(searches) == 2
+
+
+def test_search_parses_display_metadata(client, httpx_mock):
+    with_meta = _prompt(1, "Amount")
+    with_meta["display_type"] = "currency"
+    with_meta["group_name"] = "Financials"
+    httpx_mock.add_response(
+        method="POST",
+        url="https://api.test/api/prompts/search",
+        json={
+            "items": [with_meta, _prompt(2, "Plain")],
+            "page": 1,
+            "page_size": 50,
+            "has_more": False,
+        },
+    )
+
+    page = client.prompts.search()
+
+    assert page.items[0].display_type == "currency"
+    assert page.items[0].group_name == "Financials"
+    assert page.items[1].display_type is None
+    assert page.items[1].group_name is None
+
+
+def test_search_parses_example_json(client, httpx_mock):
+    with_example = _prompt(1, "Amount")
+    with_example["example"] = {"example": "$1,234.50", "explanation": "Total contract value."}
+    httpx_mock.add_response(
+        method="POST",
+        url="https://api.test/api/prompts/search",
+        json={
+            "items": [with_example, _prompt(2, "Plain")],
+            "page": 1,
+            "page_size": 50,
+            "has_more": False,
+        },
+    )
+
+    page = client.prompts.search()
+
+    assert page.items[0].example == {
+        "example": "$1,234.50",
+        "explanation": "Total contract value.",
+    }
+    assert page.items[1].example is None
