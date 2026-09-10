@@ -74,7 +74,6 @@ from .selectors import (
     build_folder_subtree_selector,
     build_has_children_selector,
     build_has_classification_selector,
-    build_has_classification_workflow_selector,
     build_has_running_workflow_selector,
     build_is_valid_selector,
     build_job_selector,
@@ -111,7 +110,6 @@ __all__ = [
     "build_has_children_selector",
     "build_has_running_workflow_selector",
     "build_has_classification_selector",
-    "build_has_classification_workflow_selector",
     # errors
     "InfersoftError",
     "AuthenticationError",

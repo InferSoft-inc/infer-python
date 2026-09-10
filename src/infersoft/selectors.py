@@ -14,7 +14,7 @@ discriminator; combine them into a Selectors object with :func:`build_selectors`
 
 These are a convenience only — anywhere a ``selectors`` argument is accepted you can
 still pass a raw dict, and methods also accept a ``document_ids=`` shortcut. Date/time
-bounds are ISO-8601 strings. Scope matches the OpenAPI ``Selector`` union (17 selectors);
+bounds are ISO-8601 strings. Scope matches the OpenAPI ``Selector`` union (16 selectors);
 the API may support more.
 """
 
@@ -152,14 +152,6 @@ def build_has_classification_selector() -> Selector:
     Use in ``exclude`` to select the unclassified documents.
     """
     return {"type": "hasClassificationSelector"}
-
-
-def build_has_classification_workflow_selector() -> Selector:
-    """Flag selector: documents that have run classification.
-
-    Use in ``exclude`` to select the documents that never ran a classification job.
-    """
-    return {"type": "hasClassificationWorkflowSelector"}
 
 
 def build_selectors(

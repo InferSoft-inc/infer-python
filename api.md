@@ -160,4 +160,4 @@ selectors = build_selectors(
   `build_folder_subtree_selector(folder_id)` ·
   `build_is_valid_selector()` · `build_has_children_selector()` ·
   `build_has_running_workflow_selector()` ·
-  `build_has_classification_selector()` · `build_has_classification_workflow_selector()`
+  `build_has_classification_selector()`
