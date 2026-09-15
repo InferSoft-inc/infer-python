@@ -507,12 +507,14 @@ docs = client.documents.search(
 )
 ```
 
-The full set: `build_file_selector`, `build_folder_selector`, `build_name_selector`,
+The full set: `build_file_selector`, `build_folder_selector`,
+`build_folder_subtree_selector`, `build_name_selector`,
 `build_document_class_selector`, `build_tag_selector`, `build_created_at_selector`,
 `build_size_selector`, `build_page_count_selector`, `build_source_document_selector`,
 `build_project_selector`, `build_job_selector`, `build_is_valid_selector`,
-`build_has_children_selector`, `build_has_running_workflow_selector`, plus
-`build_selectors(include=…, exclude=…)`. (Also available under `infersoft.selectors`.)
+`build_has_children_selector`, `build_has_running_workflow_selector`,
+`build_has_classification_selector`,
+plus `build_selectors(include=…, exclude=…)`. (Also available under `infersoft.selectors`.)
 
 When you already have a list of document IDs, skip selectors entirely — every
 selector-taking method (`documents.search`/`iterate`/`get_values`/

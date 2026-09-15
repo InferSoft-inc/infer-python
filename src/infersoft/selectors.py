@@ -14,7 +14,7 @@ discriminator; combine them into a Selectors object with :func:`build_selectors`
 
 These are a convenience only — anywhere a ``selectors`` argument is accepted you can
 still pass a raw dict, and methods also accept a ``document_ids=`` shortcut. Date/time
-bounds are ISO-8601 strings. Scope matches the OpenAPI ``Selector`` union (14 selectors);
+bounds are ISO-8601 strings. Scope matches the OpenAPI ``Selector`` union (16 selectors);
 the API may support more.
 """
 
@@ -34,6 +34,11 @@ def build_file_selector(ids: Sequence[int]) -> Selector:
 def build_folder_selector(folder_id: int) -> Selector:
     """Match documents in a folder."""
     return {"type": "folderSelector", "folder_id": folder_id}
+
+
+def build_folder_subtree_selector(folder_id: int) -> Selector:
+    """Match documents in a folder or in any folder below it, at any depth."""
+    return {"type": "folderSubtreeSelector", "folder_id": folder_id}
 
 
 def build_name_selector(value: str) -> Selector:
@@ -139,6 +144,14 @@ def build_has_children_selector() -> Selector:
 def build_has_running_workflow_selector() -> Selector:
     """Flag selector: documents with a running workflow."""
     return {"type": "hasRunningWorkflowSelector"}
+
+
+def build_has_classification_selector() -> Selector:
+    """Flag selector: documents with a classification result.
+
+    Use in ``exclude`` to select the unclassified documents.
+    """
+    return {"type": "hasClassificationSelector"}
 
 
 def build_selectors(

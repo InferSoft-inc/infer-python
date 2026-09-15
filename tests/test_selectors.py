@@ -12,6 +12,8 @@ from infersoft import (
     build_document_class_selector,
     build_file_selector,
     build_folder_selector,
+    build_folder_subtree_selector,
+    build_has_classification_selector,
     build_is_valid_selector,
     build_name_selector,
     build_page_count_selector,
@@ -36,6 +38,11 @@ def test_individual_builders_emit_correct_type_and_fields():
         "tagged_from": "2026-01-01",
     }
     assert build_is_valid_selector() == {"type": "isValidSelector"}
+    assert build_folder_subtree_selector(9) == {
+        "type": "folderSubtreeSelector",
+        "folder_id": 9,
+    }
+    assert build_has_classification_selector() == {"type": "hasClassificationSelector"}
     assert build_project_selector(7) == {"type": "projectSelector", "project_id": 7}
     # The window emits added_from/added_to (matching the server's storage field
     # names); linked_from/linked_to would be silently dropped server-side.

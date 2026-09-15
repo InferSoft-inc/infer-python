@@ -157,5 +157,7 @@ selectors = build_selectors(
   `build_created_at_selector(*, created_from=None, created_to=None)` ·
   `build_page_count_selector(*, page_count_from=None, page_count_to=None)` ·
   `build_size_selector(*, size_from=None, size_to=None)` ·
+  `build_folder_subtree_selector(folder_id)` ·
   `build_is_valid_selector()` · `build_has_children_selector()` ·
-  `build_has_running_workflow_selector()`
+  `build_has_running_workflow_selector()` ·
+  `build_has_classification_selector()`
