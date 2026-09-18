@@ -91,8 +91,9 @@ print(job.id, job.status)
 `client.extract(...)` is the end-to-end composite — upload (optional) → wait
 until ready → estimate credits → start the job → wait for completion → fetch
 values — returning an `ExtractResult` with `.values`
-(`{document_id: {field: parsed_value}}`), `.documents` (full typed extraction
-items), `.job`, and `.upload`.
+(`{document_id: {field: value}}`, typed: `Decimal` for Number, `date` for Date,
+`bool` for Boolean, `str` for String, `None` when the raw text could not be
+typed), `.documents` (full extraction items), `.job`, and `.upload`.
 
 **Inputs.** Exactly one of `files=`, `document_ids=`, or `selectors=`.
 `project_name=` requires `files=` (the upload is what creates the project);
@@ -307,9 +308,9 @@ folder = client.folders.ensure_path("2026/Q1")
 
 # Correlate a finished job back to its documents and extraction values.
 for doc in client.jobs.results(job, prompts=[553]):
-    print(doc.name, doc.extractions[553].parsed_value)
+    print(doc.name, doc.extractions[553].value, doc.extractions[553].raw_value)
 
-# Or get values as plain dicts: {document_id: {field_name: parsed_value}}.
+# Or get values as plain dicts: {document_id: {field_name: value}}.
 values = client.documents.get_values(document_ids=ids, prompts=[553])
 ```
 

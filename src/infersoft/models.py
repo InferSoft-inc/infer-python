@@ -7,7 +7,8 @@ access) before a client upgrades to a release that types them.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Any
 
@@ -232,15 +233,37 @@ class ExtractionTracebackItem(_Model):
 
 
 class ExtractionResultValue(_Model):
+    """One prompt's value on a document.
+
+    Exactly one of ``value_text`` / ``value_number`` / ``value_bool`` /
+    ``value_date`` is set when the raw value could be typed, chosen by
+    ``data_type``; none is set when it could not (``raw_value`` still carries
+    the text). ``parsed_value`` is deprecated: numbers arrive there as floats
+    and may lose precision. Read ``value`` for the typed value.
+    """
+
     name: str | None = None
     data_type: DataTypeName | None = None
     display_type: str | None = None
     group_name: str | None = None
     parsed_value: Any | None = None
+    value_text: str | None = None
+    value_number: Decimal | None = None
+    value_bool: bool | None = None
+    value_date: date | None = None
     raw_value: str | None = None
     traceback: list[ExtractionTracebackItem] = Field(default_factory=list)
     issues: list[str] = Field(default_factory=list)
     readability: float | None = None
+
+    @property
+    def value(self) -> str | Decimal | bool | date | Any | None:
+        """The typed value: the set ``value_*`` field, or ``parsed_value`` when
+        talking to a server that predates the typed fields."""
+        for typed in (self.value_text, self.value_number, self.value_bool, self.value_date):
+            if typed is not None:
+                return typed
+        return self.parsed_value
 
 
 class DocumentExtractionResultItem(_Model):
@@ -467,7 +490,7 @@ class PromptPage(_Model):
 class ExtractResult(_Model):
     """Outcome of the end-to-end ``client.extract`` pipeline.
 
-    ``values`` is the happy-path payload: ``{document_id: {field: parsed_value}}``.
+    ``values`` is the happy-path payload: ``{document_id: {field: value}}`` (typed).
     ``documents`` keeps the full typed extraction items (traceback, confidence,
     issues) and ``upload`` is present only when local files were uploaded.
     Files that failed to upload are skipped, not raised: check

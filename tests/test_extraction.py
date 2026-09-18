@@ -63,9 +63,80 @@ def test_get_with_prompts_returns_typed_extraction(client, httpx_mock):
 
 def test_extraction_results_absent_without_prompts(client, httpx_mock):
     doc_json = {k: v for k, v in _DOC_WITH_EXTRACTION.items() if k != "extraction_results"}
-    httpx_mock.add_response(
-        method="GET", url="https://api.test/api/documents/1", json=doc_json
-    )
+    httpx_mock.add_response(method="GET", url="https://api.test/api/documents/1", json=doc_json)
 
     doc = client.documents.get(1)
     assert doc.extraction_results is None
+
+
+def test_typed_value_fields_keep_precision_and_dates(client, httpx_mock):
+    from datetime import date
+    from decimal import Decimal
+
+    doc = {
+        **_DOC_WITH_EXTRACTION,
+        "extraction_results": [
+            {
+                "prompt_id": 5,
+                "value": {
+                    "name": "Royalty",
+                    "data_type": "Number",
+                    "parsed_value": 0.125,
+                    "value_number": "0.12345678901234567890123",
+                    "raw_value": "1/8",
+                },
+            },
+            {
+                "prompt_id": 6,
+                "value": {
+                    "name": "Effective Date",
+                    "data_type": "Date",
+                    "parsed_value": "2024-02-29",
+                    "value_date": "2024-02-29",
+                    "raw_value": "02/29/2024",
+                },
+            },
+            {
+                "prompt_id": 7,
+                "value": {
+                    "name": "Has Pugh",
+                    "data_type": "Boolean",
+                    "value_bool": False,
+                    "raw_value": "No",
+                },
+            },
+            {
+                "prompt_id": 8,
+                "value": {
+                    "name": "Executed Date",
+                    "data_type": "Date",
+                    "parsed_value": None,
+                    "raw_value": "Not Found",
+                },
+            },
+        ],
+    }
+    httpx_mock.add_response(
+        method="GET",
+        url="https://api.test/api/documents/1?prompt_ids=5%2C6%2C7%2C8",
+        json=doc,
+    )
+
+    got = client.documents.get(1, prompt_ids=[5, 6, 7, 8])
+    by_prompt = {item.prompt_id: item.value for item in got.extraction_results}
+
+    assert by_prompt[5].value_number == Decimal("0.12345678901234567890123")
+    assert by_prompt[5].value == Decimal("0.12345678901234567890123")
+    assert by_prompt[6].value_date == date(2024, 2, 29)
+    assert by_prompt[6].value == date(2024, 2, 29)
+    assert by_prompt[7].value_bool is False
+    assert by_prompt[7].value is False
+    assert by_prompt[8].value is None
+    assert by_prompt[8].raw_value == "Not Found"
+
+
+def test_value_falls_back_to_parsed_value_for_older_servers():
+    from infersoft.models import ExtractionResultValue
+
+    legacy = ExtractionResultValue.model_validate({"data_type": "Number", "parsed_value": 1234.5})
+    assert legacy.value == 1234.5

@@ -12,6 +12,20 @@ All notable changes to this project are documented here. The format is based on
   `jobs.estimate()`, but nothing is reserved and no `id` is returned, so it can
   be called repeatedly while composing a job. Returns the new `CreditsQuote`
   model (`total_credits`, `page_count`, `document_count`).
+- `ExtractionResultValue.value_text` / `value_number` (`Decimal`, full precision) /
+  `value_bool` / `value_date` (`date`): the typed value the server derived from
+  `raw_value`, exactly one set per item. `ExtractionResultValue.value` returns
+  whichever is set, falling back to `parsed_value` against older servers.
+
+### Changed
+- `documents.get_values()`, `jobs.results()` values and `ExtractResult.values` now
+  carry the typed `value` (`Decimal` / `date` / `bool` / `str`) instead of
+  `parsed_value`; Number values no longer pass through a float, and Date values
+  are `date` objects rather than strings.
+
+### Deprecated
+- `ExtractionResultValue.parsed_value`: still populated, but numbers arrive as
+  floats and dates as `YYYY-MM-DD` strings. Read `value` or the `value_*` fields.
 
 ## [0.1.1] - 2026-06-18
 
