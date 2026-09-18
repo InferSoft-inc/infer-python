@@ -577,7 +577,8 @@ class DocumentsResource:
         The happy-path last mile over ``iterate(prompts=...)``: each document's
         extraction items are flattened to the typed ``value`` (``Decimal`` for
         Number, ``date`` for Date, ``bool`` for Boolean, ``str`` for String;
-        ``None`` when the raw value could not be typed) keyed by prompt name
+        ``None`` when the server could not type the raw value, or the deprecated
+        ``parsed_value`` when the server predates the typed fields) keyed by prompt name
         (or by ``prompt_id`` with ``key_by="prompt_id"``; items without a name
         also fall back to the id). Traceback/confidence/issues are dropped —
         use ``iterate``/``search`` directly for the audit path. Raises

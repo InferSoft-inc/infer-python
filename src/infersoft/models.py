@@ -239,7 +239,9 @@ class ExtractionResultValue(_Model):
     ``value_date`` is set when the raw value could be typed, chosen by
     ``data_type``; none is set when it could not (``raw_value`` still carries
     the text). ``parsed_value`` is deprecated: numbers arrive there as floats
-    and may lose precision. Read ``value`` for the typed value.
+    and may lose precision. Read ``value`` for the typed value; it is ``None``
+    for an untyped result only when the server also sent no ``parsed_value``,
+    which is the case for servers that emit the typed fields.
     """
 
     name: str | None = None
@@ -258,8 +260,10 @@ class ExtractionResultValue(_Model):
 
     @property
     def value(self) -> str | Decimal | bool | date | Any | None:
-        """The typed value: the set ``value_*`` field, or ``parsed_value`` when
-        talking to a server that predates the typed fields."""
+        """The typed value: the set ``value_*`` field. When none is set this
+        returns ``parsed_value``, which is ``None`` on servers that emit the
+        typed fields and the legacy float/str value on servers that predate
+        them."""
         for typed in (self.value_text, self.value_number, self.value_bool, self.value_date):
             if typed is not None:
                 return typed

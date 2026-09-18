@@ -92,8 +92,9 @@ print(job.id, job.status)
 until ready → estimate credits → start the job → wait for completion → fetch
 values — returning an `ExtractResult` with `.values`
 (`{document_id: {field: value}}`, typed: `Decimal` for Number, `date` for Date,
-`bool` for Boolean, `str` for String, `None` when the raw text could not be
-typed), `.documents` (full extraction items), `.job`, and `.upload`.
+`bool` for Boolean, `str` for String; `None` when the server could not type the
+raw text, or the deprecated `parsed_value` when talking to a server that predates
+the typed fields), `.documents` (full extraction items), `.job`, and `.upload`.
 
 **Inputs.** Exactly one of `files=`, `document_ids=`, or `selectors=`.
 `project_name=` requires `files=` (the upload is what creates the project);
