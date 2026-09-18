@@ -45,7 +45,7 @@ client = Client(client_id="...", client_secret="...")
 # The whole pipeline in one call: upload -> wait ready -> run the extractor ->
 # wait for completion -> values as plain dicts {document_id: {field: value}}.
 result = client.extract(["invoice.pdf", "receipt.pdf"], prompts=[553])
-print(result.values)              # {42: {"Total Amount": 1234.5}, 43: {...}}
+print(result.values)              # {42: {"Total Amount": Decimal("1234.50")}, 43: {...}}
 print(result.job.status.value)    # "completed" / "partial_success"
 
 # Files the SERVER rejects (e.g. name conflicts) are skipped, not raised —
