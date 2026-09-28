@@ -60,7 +60,7 @@ Conventions used below:
   — **read**: paged `POST /api/documents/search`, fetched on demand.
 - `client.documents.get_values(selectors=None, *, document_ids=None, prompts, key_by="name") -> dict[int, dict[str | int, Any]]`
   — **read/composite**: paged `POST /api/documents/search` with `prompts`, flattened
-  to `{document_id: {field: parsed_value}}`.
+  to `{document_id: {field: value}}` using the typed `value_*` field for each item.
 - `client.documents.move_to_folder(selectors=None, *, document_ids=None, target_folder_id=None, idempotency_key=None) -> MoveResult`
   — **write**: `POST /api/documents/move-to-folder`.
 - `client.documents.bulk_delete(selectors=None, *, document_ids=None, dry_run=False, idempotency_key=None) -> BulkDeleteResult`

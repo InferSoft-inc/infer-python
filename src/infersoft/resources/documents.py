@@ -93,7 +93,7 @@ def _derive_remote_names(
 def _flatten_extractions(
     doc: DocumentSummary, key_by: Literal["name", "prompt_id"]
 ) -> dict[str | int, Any]:
-    """Flatten a document's extraction items to ``{field: parsed_value}``."""
+    """Flatten a document's extraction items to ``{field: value}`` (typed)."""
     row: dict[str | int, Any] = {}
     for item in doc.extraction_results or []:
         key: str | int = (
@@ -104,7 +104,7 @@ def _flatten_extractions(
                 f"two prompts share the extraction key {key!r} on document {doc.id}; "
                 "pass key_by='prompt_id' to disambiguate"
             )
-        row[key] = item.value.parsed_value
+        row[key] = item.value.value
     return row
 
 
@@ -575,7 +575,10 @@ class DocumentsResource:
         """Fetch extraction values as plain dicts: ``{document_id: {field: value}}``.
 
         The happy-path last mile over ``iterate(prompts=...)``: each document's
-        extraction items are flattened to ``parsed_value`` keyed by prompt name
+        extraction items are flattened to the typed ``value`` (``Decimal`` for
+        Number, ``date`` for Date, ``bool`` for Boolean, ``str`` for String;
+        ``None`` when the server could not type the raw value, or the deprecated
+        ``parsed_value`` when the server predates the typed fields) keyed by prompt name
         (or by ``prompt_id`` with ``key_by="prompt_id"``; items without a name
         also fall back to the id). Traceback/confidence/issues are dropped —
         use ``iterate``/``search`` directly for the audit path. Raises
