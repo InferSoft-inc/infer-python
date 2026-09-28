@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-09-28
+
 ### Added
 - `jobs.quote()` (sync and async) — read-only credit calculation via
   `POST /api/jobs/credits/quote`. Same request shape and formula as
