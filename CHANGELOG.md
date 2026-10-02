@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-01
+
+### Added
+- `ExtractionResultValue.is_processing`: true while a workflow running on the
+  document includes the prompt. `documents.search` / `get` / `iterate` now also
+  return an item for each requested prompt that is still processing and has no
+  result yet, with `is_processing` set and no value fields.
+
+### Changed
+- `documents.get_values()`, `jobs.results()` values and `ExtractResult.values`
+  leave out prompts that are still processing without a result, so their output
+  is unchanged by the new items.
+
 ## [0.1.2] - 2026-09-28
 
 ### Added

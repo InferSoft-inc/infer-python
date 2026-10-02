@@ -239,6 +239,47 @@ def test_get_values_key_by_prompt_id_and_collision_raises(client, httpx_mock):
     assert values == {1: {5: 1.0, 6: 2.0}}
 
 
+def test_is_processing_parses_and_defaults_false():
+    doc = DocumentSummary.model_validate(
+        _doc_with_extractions(
+            1,
+            [
+                _item(5, "Total", 1.0),
+                {"prompt_id": 6, "value": {"name": "Vendor", "is_processing": True}},
+            ],
+        )
+    )
+    assert doc.extractions[5].is_processing is False
+    assert doc.extractions[6].is_processing is True
+    assert doc.extractions[6].value is None
+
+
+def test_get_values_skips_prompts_processing_without_result(client, httpx_mock):
+    running = _doc_with_extractions(
+        1,
+        [
+            {"prompt_id": 5, "value": {"name": "Total", "is_processing": True}},
+            {
+                "prompt_id": 6,
+                "value": {
+                    "name": "Vendor",
+                    "raw_value": "ACME",
+                    "value_text": "ACME",
+                    "is_processing": True,
+                },
+            },
+            {"prompt_id": 7, "value": {"name": "Total", "raw_value": "9", "value_text": "9"}},
+        ],
+    )
+    httpx_mock.add_response(
+        method="POST", url="https://api.test/api/documents/search", json=_page([running])
+    )
+
+    values = client.documents.get_values(document_ids=[1], prompts=[5, 6, 7])
+
+    assert values == {1: {"Vendor": "ACME", "Total": "9"}}
+
+
 # ----- async parity (representative slice) ---------------------------------------
 
 
