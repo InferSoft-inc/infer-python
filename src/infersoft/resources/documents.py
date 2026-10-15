@@ -93,9 +93,14 @@ def _derive_remote_names(
 def _flatten_extractions(
     doc: DocumentSummary, key_by: Literal["name", "prompt_id"]
 ) -> dict[str | int, Any]:
-    """Flatten a document's extraction items to ``{field: value}`` (typed)."""
+    """Flatten a document's extraction items to ``{field: value}`` (typed).
+
+    Prompts still processing without a result yet are left out.
+    """
     row: dict[str | int, Any] = {}
     for item in doc.extraction_results or []:
+        if item.value.is_processing and item.value.raw_value is None and item.value.value is None:
+            continue
         key: str | int = (
             item.value.name if (key_by == "name" and item.value.name) else item.prompt_id
         )
@@ -581,7 +586,8 @@ class DocumentsResource:
         ``parsed_value`` when the server predates the typed fields) keyed by prompt name
         (or by ``prompt_id`` with ``key_by="prompt_id"``; items without a name
         also fall back to the id). Traceback/confidence/issues are dropped —
-        use ``iterate``/``search`` directly for the audit path. Raises
+        use ``iterate``/``search`` directly for the audit path. Prompts a running
+        workflow has not produced a result for yet are left out. Raises
         ``ValueError`` if two prompts share a name within one document.
         """
         out: dict[int, dict[str | int, Any]] = {}

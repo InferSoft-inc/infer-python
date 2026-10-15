@@ -242,6 +242,11 @@ class ExtractionResultValue(_Model):
     and may lose precision. Read ``value`` for the typed value; it is ``None``
     for an untyped result only when the server also sent no ``parsed_value``,
     which is the case for servers that emit the typed fields.
+
+    ``is_processing`` is true while a workflow running on the document includes
+    this prompt. A prompt with no result yet is returned with it set and no
+    value fields; on a re-run the values may be the previous or the new result
+    until the workflow finishes.
     """
 
     name: str | None = None
@@ -257,6 +262,7 @@ class ExtractionResultValue(_Model):
     traceback: list[ExtractionTracebackItem] = Field(default_factory=list)
     issues: list[str] = Field(default_factory=list)
     readability: float | None = None
+    is_processing: bool = False
 
     @property
     def value(self) -> str | Decimal | bool | date | Any | None:
