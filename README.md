@@ -8,6 +8,7 @@
 Python client for the [InferSoft](https://platform.infersoft.com) document-processing REST API.
 
 Full endpoint reference: [api.md](https://github.com/InferSoft-inc/infer-python/blob/main/api.md) — every method, mapped to the REST calls it makes.
+The REST API itself is documented at [api.infersoft.com/documentation](https://api.infersoft.com/documentation/).
 
 ## Install
 
@@ -92,9 +93,9 @@ print(job.id, job.status)
 until ready → estimate credits → start the job → wait for completion → fetch
 values — returning an `ExtractResult` with `.values`
 (`{document_id: {field: value}}`, typed: `Decimal` for Number, `date` for Date,
-`bool` for Boolean, `str` for String; `None` when the server could not type the
-raw text, or the deprecated `parsed_value` when talking to a server that predates
-the typed fields), `.documents` (full extraction items), `.job`, and `.upload`.
+`bool` for Boolean, `str` for String; when the server sent no typed field, for
+example because the raw text could not be typed, the deprecated `parsed_value`,
+which may be `None`), `.documents` (full extraction items), `.job`, and `.upload`.
 
 **Inputs.** Exactly one of `files=`, `document_ids=`, or `selectors=`.
 `project_name=` requires `files=` (the upload is what creates the project);
@@ -313,6 +314,10 @@ for doc in client.jobs.results(job, prompts=[553]):
 
 # Or get values as plain dicts: {document_id: {field_name: value}}.
 values = client.documents.get_values(document_ids=ids, prompts=[553])
+
+# Price a job without reserving anything (no id, nothing to start).
+quote = client.jobs.quote(step="extractor", document_ids=ids, prompts=[553])
+print(quote.total_credits, quote.page_count, quote.document_count)
 ```
 
 ## Errors
@@ -397,9 +402,8 @@ state.write_text(json.dumps({"upload_key": key}))  # persist BEFORE calling
 result = client.documents.upload(paths, idempotency_key=key)
 ```
 
-Recorded responses are replayable for a server-defined retention window (see
-the API documentation); a fresh logical operation should always use a fresh
-key.
+Recorded responses are replayable for a server-defined retention window; a
+fresh logical operation should always use a fresh key.
 
 **Slow writes.** If a retry arrives while the original request is still
 executing server-side, the SDK recognizes the API's "request in progress"
@@ -475,8 +479,7 @@ original releases the shared pool), so copies are safe to use as context
 managers.
 
 **Rate limiting.** The API rate-limits per organization and answers excess
-traffic with 429s carrying `Retry-After` (see the API documentation for
-current limits). You usually don't need to do anything: the SDK backs off and
+traffic with 429s carrying `Retry-After`. You usually don't need to do anything: the SDK backs off and
 retries within its budget, and only surfaces `RateLimitError` once the budget
 is exhausted — catch it to pause longer or shed load. For sustained bulk work,
 prefer fewer concurrent calls plus the bulk helpers (`upload_many`,
@@ -534,8 +537,14 @@ Pass either `selectors` or `document_ids`, not both.
 
 The full method-by-method reference — every resource method mapped to the REST
 calls it makes — lives in [api.md](https://github.com/InferSoft-inc/infer-python/blob/main/api.md). Extraction results come back inline
-as typed `DocumentExtractionResultItem`s on `documents.search`/`get` when you
-pass prompt IDs; there is no separate extraction endpoint.
+as typed `DocumentExtractionResultItem`s on `documents.search`/`get`/`iterate`
+when you pass prompt IDs.
+
+While a running workflow includes a prompt, that prompt's item has
+`value.is_processing` set. A prompt with no result yet still gets an item, with
+`is_processing=True` and no value fields. `get_values()` and
+`ExtractResult.values` leave those items out; the documents returned by
+`search`, `get`, `iterate` and `jobs.results()` keep them.
 
 ## License
 
@@ -543,9 +552,6 @@ Apache License 2.0 — see [LICENSE](https://github.com/InferSoft-inc/infer-pyth
 
 ## Development
 
-```bash
-pip install -e ".[dev]"
-ruff check .
-mypy src
-pytest
-```
+How the SDK is built, kept in sync with the REST API, tested and released to
+PyPI: [docs/MAINTAINING.md](https://github.com/InferSoft-inc/infer-python/blob/main/docs/MAINTAINING.md).
+Release history: [CHANGELOG.md](https://github.com/InferSoft-inc/infer-python/blob/main/CHANGELOG.md).

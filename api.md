@@ -36,10 +36,11 @@ Conventions used below:
 ## Documents
 
 - `client.documents.upload(files, *, flatten=True, project_id=None, project_name=None, tag_ids=None, tag_names=None, content_type=None, on_duplicate="allow", idempotency_key=None, wait=False, max_wait_seconds=600.0, poll_interval=2.0) -> UploadResult`
-  — `on_duplicate` is `"allow"` (default) / `"notify"` / `"block"` for content matches (see README → Uploads).
   — **write/composite**: `POST /api/uploads` (plans the batch, ≤100 files), then one
-  presigned `PUT` per file (unauthenticated, to S3); with `wait=True`, polled
-  `POST /api/documents/search` until every document is `ready`.
+  unauthenticated `PUT` per file to its CloudFront-signed URL; with `wait=True`, polled
+  `POST /api/documents/search` until every document is `ready`. `on_duplicate` is
+  `"allow"` (default) / `"notify"` / `"block"` for content matches (see README → Uploads);
+  `"block"` also sends `DELETE /api/documents/{id}` for each skipped placeholder.
 - `client.documents.upload_many(files, *, pattern="**/*", flatten=True, batch_size=100, ..., on_batch=None, wait=False, ...) -> UploadResult`
   — **write/composite**: bulk uploads of any size; directory globbing; one
   `upload` batch per `batch_size` files with deterministic per-batch keys derived from

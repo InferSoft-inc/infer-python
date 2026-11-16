@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-## [0.1.3] - 2026-10-01
+## [0.1.3] - 2026-10-21
 
 ### Added
 - `ExtractionResultValue.is_processing`: true while a workflow running on the
