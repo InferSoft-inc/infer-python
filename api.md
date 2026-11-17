@@ -6,7 +6,8 @@ it on hover); this file is the map of what exists and what it does on the wire.
 
 The async client (`AsyncClient`) mirrors this surface one to one: every method below exists
 with identical signatures and semantics, awaited (`await client.documents.upload(...)`,
-`async for` on iterators).
+`async for` on iterators). The one exception is `with_options()`, a plain method that
+returns a new `AsyncClient` directly and is not awaited.
 
 Conventions used below:
 
