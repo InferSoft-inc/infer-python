@@ -89,7 +89,7 @@ sequenceDiagram
    - **build & verify**: fails unless the tag without its `v` equals `__version__`, reruns `ruff`, `mypy` and `pytest`, builds the sdist and wheel, uploads them as the `dist` artifact.
    - **publish to PyPI**: runs in the GitHub environment `pypi`, which only accepts refs matching the tag pattern `v*`. It has `id-token: write` and publishes through PyPI Trusted Publishing (GitHub OpenID Connect, OIDC), so there is no PyPI token or repository secret. The PyPI trusted publisher must stay registered for this repo, `release.yml` and the `pypi` environment. `skip-existing: true` lets a failed publish be re-run without burning the version.
 
-A tag pushed on a commit whose `_version.py` does not match fails the version check and publishes nothing (the first `v0.1.2` push did this).
+A tag pushed on a commit whose `_version.py` does not match fails the version check and publishes nothing.
 
 Published versions and their dates are on [PyPI](https://pypi.org/project/infersoft/#history) and in [CHANGELOG.md](../CHANGELOG.md).
 
@@ -153,7 +153,7 @@ These values live in both codebases. Change them together.
 |---|---|
 | `_PROBLEM_TYPE_REQUEST_IN_PROGRESS` in [`_http.py`](../src/infersoft/_http.py) | `ProblemTypeRequestInProgress` in `rest-api/internal/idempotency/middleware.go` (the transient 409 the SDK retries, honoring `Retry-After`) |
 | `MAX_BATCH_FILES = 100` in [`resources/documents.py`](../src/infersoft/resources/documents.py) | `BatchUploadRequest.files` `maxItems: 100` |
-| `build_*_selector` set in [`selectors.py`](../src/infersoft/selectors.py) (16 selectors) | `Selector` union in the spec |
+| `build_*_selector` set in [`selectors.py`](../src/infersoft/selectors.py) | `Selector` union in the spec |
 | `JobStatus`, `DocumentStatus`, `DataTypeName` in [`models.py`](../src/infersoft/models.py) | `JobStatus`, `DocumentStatus`, `DataTypeName` enums in the spec |
 | Terminal job statuses (`completed`, `failed`, `partial_success`) in [`resources/jobs.py`](../src/infersoft/resources/jobs.py) | `JobStatus` enum (`running` and `creating_workflows` are non-terminal) |
 | Default endpoints in [`_client.py`](../src/infersoft/_client.py) | `ProdInferRESTStack` props in `bin/infer-rest.ts` |
