@@ -29,8 +29,14 @@ All notable changes to this project are documented here. The format is based on
   model (`total_credits`, `page_count`, `document_count`).
 - `ExtractionResultValue.value_text` / `value_number` (`Decimal`, full precision) /
   `value_bool` / `value_date` (`date`): the typed value the server derived from
-  `raw_value`, exactly one set per item. `ExtractionResultValue.value` returns
+  `raw_value`, at most one set per item (none when the raw value could not be
+  typed). `ExtractionResultValue.value` returns
   whichever is set, falling back to `parsed_value` against older servers.
+- `build_folder_subtree_selector(folder_id)` (a folder and every folder below it)
+  and `build_has_classification_selector()` (documents with a classification
+  result; use it in `exclude` for unclassified ones).
+- `PromptMeta.example`, and `display_type` / `group_name` on `PromptMeta` and
+  `ExtractionResultValue`.
 
 ### Changed
 - `documents.get_values()`, `jobs.results()` values and `ExtractResult.values` now

@@ -42,6 +42,9 @@ Conventions used below:
   `POST /api/documents/search` until every document is `ready`. `on_duplicate` is
   `"allow"` (default) / `"notify"` / `"block"` for content matches (see README → Uploads);
   `"block"` also sends `DELETE /api/documents/{id}` for each skipped placeholder.
+  `UploadResult.document_ids` still includes those deleted placeholders, so with
+  `wait=True` a skipped file makes the wait run out `max_wait_seconds` and raise
+  `WaitTimeoutError`.
 - `client.documents.upload_many(files, *, pattern="**/*", flatten=True, batch_size=100, ..., on_batch=None, wait=False, ...) -> UploadResult`
   (**write/composite**): bulk uploads of any size; directory globbing; one
   `upload` batch per `batch_size` files with deterministic per-batch keys derived from
