@@ -20,9 +20,8 @@ Requires Python 3.10+. Two runtime dependencies: `httpx` and `pydantic` v2.
 
 ## Authentication
 
-The SDK uses OAuth2 **client credentials**. Create them for your
-organization at [platform.infersoft.com](https://platform.infersoft.com).
-The SDK fetches a bearer token,
+The SDK uses OAuth2 **client credentials** (a client ID and secret) that
+InferSoft issues for your organization. The SDK fetches a bearer token,
 caches it until shortly before expiry, and refreshes automatically. Configure
 via constructor arguments or environment variables:
 
@@ -69,7 +68,7 @@ for p in client.prompts.iterate():
     print(p.id, p.name)
 ```
 
-Six runnable end-to-end programs live in [examples/](https://github.com/InferSoft-inc/infer-python/tree/main/examples),
+Runnable end-to-end programs live in [examples/](https://github.com/InferSoft-inc/infer-python/tree/main/examples),
 from the quickstart to a resumable bulk import, CSV export, concurrent
 downloads, and production-shaped error handling. All of them read credentials
 from the `INFERSOFT_*` environment variables above.
@@ -129,8 +128,9 @@ defaulting to 30 minutes per phase.
 
 ## Async
 
-`AsyncClient` mirrors `Client` exactly: same constructor and methods, every call
-awaited, and `iterate(...)` yields with `async for`:
+`AsyncClient` mirrors `Client`: same constructor and methods, every API call
+awaited, and `iterate(...)` yields with `async for`. `with_options()` is a plain
+call that returns a new `AsyncClient`, and `aclose()` (or `async with`) closes it:
 
 ```python
 import asyncio
@@ -327,9 +327,9 @@ Every runtime failure (HTTP errors, transport problems, timeouts, pipeline
 failures) raises a subclass of `InfersoftError`, so one
 `except InfersoftError` is the safety net for things that can go wrong at run
 time. Usage errors raise the standard library types instead: bad arguments are
-`ValueError`, missing local files `FileNotFoundError`, download collisions
-`FileExistsError` / `NotADirectoryError`. Catch specific classes when you
-react programmatically:
+`ValueError`, missing local files `FileNotFoundError`, an existing download
+target `FileExistsError`, a missing download directory `NotADirectoryError`.
+Catch specific classes when you react programmatically:
 
 ```python
 from infersoft import ConflictError, InfersoftError
@@ -377,7 +377,9 @@ the raw `response`.
 Writes send an `Idempotency-Key` (every method with an `idempotency_key=`
 parameter). The server executes the request once,
 records the response, and replays that same response to any retry carrying the
-same key, so retried writes never double-execute. A replayed response carries
+same key, so a retried write does not run twice (if the API cannot reach its
+idempotency store, it runs the request without that protection rather than
+failing it). A replayed response carries
 the `Idempotency-Replayed: true` header, so you can tell a cached replay from a
 fresh execution. By default the SDK
 generates a fresh key per call, which makes its own transient-failure retries

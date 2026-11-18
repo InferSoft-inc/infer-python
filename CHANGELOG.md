@@ -15,9 +15,9 @@ All notable changes to this project are documented here. The format is based on
   result yet, with `is_processing` set and no value fields.
 
 ### Changed
-- `documents.get_values()`, `jobs.results()` values and `ExtractResult.values`
-  leave out prompts that are still processing without a result, so their output
-  is unchanged by the new items.
+- `documents.get_values()` and `ExtractResult.values` leave out prompts that are
+  still processing without a result, so their output is unchanged by the new
+  items.
 
 ## [0.1.2] - 2026-09-28
 
@@ -39,10 +39,10 @@ All notable changes to this project are documented here. The format is based on
   `ExtractionResultValue`.
 
 ### Changed
-- `documents.get_values()`, `jobs.results()` values and `ExtractResult.values` now
-  carry the typed `value` (`Decimal` / `date` / `bool` / `str`) instead of
-  `parsed_value`; Number values no longer pass through a float, and Date values
-  are `date` objects rather than strings.
+- `documents.get_values()` and `ExtractResult.values` now carry the typed `value`
+  (`Decimal` / `date` / `bool` / `str`) instead of `parsed_value`; Number values no
+  longer pass through a float, and Date values are `date` objects rather than
+  strings.
 
 ### Deprecated
 - `ExtractionResultValue.parsed_value`: still populated, but numbers arrive as
@@ -127,6 +127,11 @@ All notable changes to this project are documented here. The format is based on
   safe to retry. Each method accepts an optional `idempotency_key` to reuse a key
   across process restarts. Read-only POST searches are retried without a key.
 - Logging via the standard library `"infersoft"` logger (HTTP retries logged at DEBUG).
+- Also in this release: `documents.download()` / `download_url()` with
+  `DownloadTransferError`; `upload(on_duplicate=...)` with the MD5 content-duplicate
+  check; `upload_timeout` and `upload_max_retries` for file transfers (also
+  accepted by `with_options`); `PreconditionFailedError` (412) and
+  `PayloadTooLargeError` (413).
 
 ### Changed
 - Response models now use pydantic `extra="allow"` (was `extra="ignore"`), so unknown
