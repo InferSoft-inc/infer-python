@@ -159,13 +159,13 @@ These values live in both codebases. Change them together.
 | Terminal job statuses (`completed`, `failed`, `partial_success`) in [`resources/jobs.py`](../src/infersoft/resources/jobs.py) | `JobStatus` enum (`running` and `creating_workflows` are non-terminal) |
 | Default endpoints in [`_client.py`](../src/infersoft/_client.py) | `ProdInferRESTStack` props in `bin/infer-rest.ts` |
 
-Enums are extensible: an unknown value parses, is treated as non-terminal by the waiters, and each wait call logs one warning per unknown value. A new terminal status therefore needs an SDK release, or waits run until `max_wait_seconds`.
+Enums are extensible: an unknown value parses, is treated as non-terminal by the waiters, and each wait call logs one warning per unknown value. A new terminal status therefore needs an SDK release, or waits run until `max_wait_seconds`, and forever when it is `None` or 0.
 
 ### Keeping in sync with the spec
 
-1. Find what changed in infer-rest's spec since the last SDK release (production runs infer-rest `main`):
+1. Find what changed in infer-rest's spec since the last SDK release (production runs infer-rest `main`; `<last-release-date>` is the date of the latest version in CHANGELOG.md):
    ```bash
-   git -C ../infer-rest log -p origin/main -- rest-api/openapi.yaml
+   git -C ../infer-rest log -p --since=<last-release-date> origin/main -- rest-api/openapi.yaml
    ```
 2. Update the models, resources and selector builders here and add tests that mock the new wire shape with `pytest-httpx`.
 3. Update api.md and README.md, and add an entry under `## [Unreleased]` in CHANGELOG.md.

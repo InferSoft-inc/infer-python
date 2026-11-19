@@ -383,13 +383,14 @@ failing it). A replayed response carries
 the `Idempotency-Replayed: true` header, so you can tell a cached replay from a
 fresh execution. By default the SDK
 generates a fresh key per call, which makes its own transient-failure retries
-safe with zero configuration; every retry attempt within one call reuses the
-same key.
+safe with zero configuration while the API reaches its idempotency store; every
+retry attempt within one call reuses the same key.
 
 **Exactly-once across process restarts.** Auto-generated keys die with the
 process. If your script might crash between sending a write and recording its
 outcome, persist the key *before* the call. Re-running then replays the
-original result instead of repeating the work:
+original result instead of repeating the work (again only while the API reaches
+its idempotency store):
 
 ```python
 import json, uuid

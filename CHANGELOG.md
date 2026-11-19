@@ -42,7 +42,8 @@ All notable changes to this project are documented here. The format is based on
 - `documents.get_values()` and `ExtractResult.values` now carry the typed `value`
   (`Decimal` / `date` / `bool` / `str`) instead of `parsed_value`; Number values no
   longer pass through a float, and Date values are `date` objects rather than
-  strings.
+  strings, when the server sends the typed fields (against an older server `value`
+  is still `parsed_value`).
 
 ### Deprecated
 - `ExtractionResultValue.parsed_value`: still populated, but numbers arrive as
@@ -129,9 +130,9 @@ All notable changes to this project are documented here. The format is based on
 - Logging via the standard library `"infersoft"` logger (HTTP retries logged at DEBUG).
 - Also in this release: `documents.download()` / `download_url()` with
   `DownloadTransferError`; `upload(on_duplicate=...)` with the MD5 content-duplicate
-  check; `upload_timeout` and `upload_max_retries` for file transfers (also
-  accepted by `with_options`); `PreconditionFailedError` (412) and
-  `PayloadTooLargeError` (413).
+  check; `upload_timeout` and `upload_max_retries` for file transfers
+  (`upload_max_retries` is also accepted by `with_options`, `upload_timeout` is
+  not); `PreconditionFailedError` (412) and `PayloadTooLargeError` (413).
 
 ### Changed
 - Response models now use pydantic `extra="allow"` (was `extra="ignore"`), so unknown
