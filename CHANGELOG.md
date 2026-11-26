@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-## [0.1.3] - 2026-10-01
+## [0.1.3] - 2026-10-21
 
 ### Added
 - `ExtractionResultValue.is_processing`: true while a workflow running on the
@@ -15,28 +15,35 @@ All notable changes to this project are documented here. The format is based on
   result yet, with `is_processing` set and no value fields.
 
 ### Changed
-- `documents.get_values()`, `jobs.results()` values and `ExtractResult.values`
-  leave out prompts that are still processing without a result, so their output
-  is unchanged by the new items.
+- `documents.get_values()` and `ExtractResult.values` leave out prompts that are
+  still processing without a result, so their output is unchanged by the new
+  items.
 
 ## [0.1.2] - 2026-09-28
 
 ### Added
-- `jobs.quote()` (sync and async) — read-only credit calculation via
+- `jobs.quote()` (sync and async): read-only credit calculation via
   `POST /api/jobs/credits/quote`. Same request shape and formula as
   `jobs.estimate()`, but nothing is reserved and no `id` is returned, so it can
   be called repeatedly while composing a job. Returns the new `CreditsQuote`
   model (`total_credits`, `page_count`, `document_count`).
 - `ExtractionResultValue.value_text` / `value_number` (`Decimal`, full precision) /
   `value_bool` / `value_date` (`date`): the typed value the server derived from
-  `raw_value`, exactly one set per item. `ExtractionResultValue.value` returns
+  `raw_value`, at most one set per item (none when the raw value could not be
+  typed). `ExtractionResultValue.value` returns
   whichever is set, falling back to `parsed_value` against older servers.
+- `build_folder_subtree_selector(folder_id)` (a folder and every folder below it)
+  and `build_has_classification_selector()` (documents with a classification
+  result; use it in `exclude` for unclassified ones).
+- `PromptMeta.example`, and `display_type` / `group_name` on `PromptMeta` and
+  `ExtractionResultValue`.
 
 ### Changed
-- `documents.get_values()`, `jobs.results()` values and `ExtractResult.values` now
-  carry the typed `value` (`Decimal` / `date` / `bool` / `str`) instead of
-  `parsed_value`; Number values no longer pass through a float, and Date values
-  are `date` objects rather than strings.
+- `documents.get_values()` and `ExtractResult.values` now carry the typed `value`
+  (`Decimal` / `date` / `bool` / `str`) instead of `parsed_value`; Number values no
+  longer pass through a float, and Date values are `date` objects rather than
+  strings, when the server sends the typed fields (against an older server `value`
+  is still `parsed_value`).
 
 ### Deprecated
 - `ExtractionResultValue.parsed_value`: still populated, but numbers arrive as
@@ -46,19 +53,19 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 - Transport-level resilience: connection failures and timeouts are now retried on the
-  same budget/backoff as transient status codes, and — once the budget is exhausted —
+  same budget/backoff as transient status codes and, once the budget is exhausted,
   raised as `APITimeoutError` / `APIConnectionError` (both under `InfersoftError`)
   instead of leaking raw `httpx` exceptions. The original error is preserved as
   `__cause__`.
-- `documents.upload_many()` (sync and async) — explicitly-bulk upload that chunks any
+- `documents.upload_many()` (sync and async): explicitly-bulk upload that chunks any
   number of files into batches of up to `MAX_BATCH_FILES` (`upload()` stays strict).
   Accepts a directory (globbed via `pattern`, hidden files skipped; `flatten=False`
   replicates its layout), validates duplicate names across the whole set, threads a
-  `project_name`-created project's id across batches, derives per-batch idempotency
+  `project_name`-created project's ID across batches, derives per-batch idempotency
   keys (`<base>-0000`, …) for resumable re-runs, reports progress via `on_batch`, and
   raises the new `UploadManyError` (with `.partial` / `.batches_completed`) on a
   mid-run failure.
-- `client.extract()` / `AsyncClient.extract()` — the end-to-end pipeline in one call:
+- `client.extract()` / `AsyncClient.extract()`: the end-to-end pipeline in one call:
   upload (or take `document_ids`/`selectors`) → wait ready → run the extractor (with
   `max_credits` passthrough) → wait for completion → documents plus values flattened to
   `{document_id: {field: parsed_value}}` (`ExtractResult`). A `failed` job raises the new
@@ -70,14 +77,14 @@ All notable changes to this project are documented here. The format is based on
   with creation-race recovery, `jobs.results(job, prompts=…)` correlating a job back to
   its documents and extraction values, `documents.get_values(...)` flattening extraction
   results to `{document_id: {field: parsed_value}}`, and a `DocumentSummary.extractions`
-  accessor keyed by prompt id.
-- `with_options(timeout=…, max_retries=…)` on `Client` and `AsyncClient` — returns a
+  accessor keyed by prompt ID.
+- `with_options(timeout=…, max_retries=…)` on `Client` and `AsyncClient`: returns a
   cheap copy sharing the connection pool and cached token, applying the overrides to
   its requests (e.g. a long timeout for one heavy call, or `max_retries=0` to fail
   fast). Closing a copy is a no-op, so copies are safe as context managers; the
   override covers API requests (token acquisition and presigned upload PUTs keep
   their own timeouts).
-- `AsyncClient` — full async parity with `Client` (same constructor and resources;
+- `AsyncClient`: full async parity with `Client` (same constructor and resources;
   every method is a coroutine, `iterate(...)` is an async generator, plus `aclose()`
   and async context-manager support). Shares the auth, retry, idempotency, pagination,
   and waiter behavior via httpx's async transport.
@@ -85,10 +92,10 @@ All notable changes to this project are documented here. The format is based on
   documents resource (`MoveResult`, `BulkDeleteResult` models).
 - `projects.assign_documents`, completing the projects resource
   (`AssignDocumentsResult` model).
-- `client.folders` resource — `create`, `get`, `rename`, `search`, `iterate`, `move`,
+- `client.folders` resource: `create`, `get`, `rename`, `search`, `iterate`, `move`,
   `bulk_delete`, `resolve_paths` (`Folder`, `FolderPage`, `FolderMoveResult`,
   `FolderBulkDeleteResult`, `FolderPathResult`, `FolderPathsResult` models).
-- `client.prompts` resource — `search`, `iterate` (`PromptMeta`, `PromptPage`,
+- `client.prompts` resource: `search`, `iterate` (`PromptMeta`, `PromptPage`,
   `DataTypeName` models).
 - Typed extraction results: `DocumentSummary.extraction_results` is now
   `list[DocumentExtractionResultItem]` (with `ExtractionResultValue`,
@@ -99,7 +106,7 @@ All notable changes to this project are documented here. The format is based on
   `infersoft.selectors`), so `selectors` payloads no longer need raw dicts.
 - `document_ids=` shortcut on every selector-taking method (`documents.search`,
   `move_to_folder`, `bulk_delete`, `projects.assign_documents`, `jobs.estimate`/`run`)
-  — wraps a list of IDs into a file selector. Mutually exclusive with `selectors`.
+  that wraps a list of IDs into a file selector. Mutually exclusive with `selectors`.
 - Polling waiters for async work: `jobs.wait()` / `jobs.run(wait=True)` (poll to a
   terminal status) and `documents.wait_until_ready()` / `documents.upload(wait=True)`
   (poll until documents are `ready`). `max_wait_seconds=None`/`0` waits indefinitely;
@@ -111,7 +118,7 @@ All notable changes to this project are documented here. The format is based on
 - End-to-end `documents.upload()` that hides the presign + S3 PUT choreography, with a
   `flatten` switch controlling shared-basename handling.
 - Auto-paginating `iterate()` generators on every list resource.
-- `request_id` captured from response headers (and the S3 `x-amz-*` id) and surfaced on
+- `request_id` captured from response headers (and the S3 `x-amz-*` ID) and surfaced on
   `APIError` / `UploadTransferError`. The API does not emit one yet; the attribute
   populates automatically once it does.
 - Retry of idempotent requests on transient failures (408/429/5xx) with exponential
@@ -120,7 +127,12 @@ All notable changes to this project are documented here. The format is based on
   auto-generated `Idempotency-Key` so the server deduplicates retries, making them
   safe to retry. Each method accepts an optional `idempotency_key` to reuse a key
   across process restarts. Read-only POST searches are retried without a key.
-- Logging via the stdlib `"infersoft"` logger (HTTP retries logged at DEBUG).
+- Logging via the standard library `"infersoft"` logger (HTTP retries logged at DEBUG).
+- Also in this release: `documents.download()` / `download_url()` with
+  `DownloadTransferError`; `upload(on_duplicate=...)` with the MD5 content-duplicate
+  check; `upload_timeout` and `upload_max_retries` for file transfers
+  (`upload_max_retries` is also accepted by `with_options`, `upload_timeout` is
+  not); `PreconditionFailedError` (412) and `PayloadTooLargeError` (413).
 
 ### Changed
 - Response models now use pydantic `extra="allow"` (was `extra="ignore"`), so unknown
